@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Supplement.Models
+namespace Supplement.ViewModels.Users
 {
-    public class Items
+    public class CategoryVM
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public int SubcategoryId { get; set; }
-        public Subcategory Subcategory { get; set; }
     }
 }

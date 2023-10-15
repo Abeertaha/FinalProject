@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Supplement.Models
+namespace Supplement.ViewModels.Subcategory
 {
-    public class Category
+    public class DeleteSubcategoryVM
     {
         public int Id { get; set; }
-        public string Name { get; set; }
     }
 }

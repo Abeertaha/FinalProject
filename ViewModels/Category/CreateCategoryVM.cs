@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
-namespace Supplement.Models
+namespace Supplement.ViewModels.Category
 {
-    public class Category
+    public class CreateCategoryVM
     {
-        public int Id { get; set; }
         public string Name { get; set; }
     }
 }

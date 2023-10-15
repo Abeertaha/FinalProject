@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Supplement.Models
+namespace Supplement.ViewModels.Order
 {
-    public class Category
+    public class CreateOrderVM
     {
-        public int Id { get; set; }
         public string Name { get; set; }
+        public int BasketId { get; set; }
     }
 }
