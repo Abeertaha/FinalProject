@@ -12,25 +12,53 @@ using Supplement.DataAccess;
 
 namespace Supplement.Controllers
 {
-    [Route("[controller]")]
-    public class BasketController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class BasketController : ControllerBase
     {
-        private readonly ILogger<BasketController> _logger;
-
-        public BasketController(ILogger<BasketController> logger)
+        private readonly DbConnection _connection;
+        public BasketController(DbConnection connection)
         {
-            _logger = logger;
+            _connection = connection;
         }
 
-        public IActionResult Index()
+        [HttpGet]
+        public async Task<IActionResult> GetBasketItems(int userId)
         {
-            return View();
+            try
+            {
+                var basketItems = await _connection.Baskets
+                .Where(item => item.UserId == userId)
+                .ToListAsync();
+
+                return Ok(basketItems);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpPost]
+        public async Task<IActionResult> AddToBasket(AddToBasketVM vm)
         {
-            return View("Error!");
+            try
+            {
+                var basketItem = new Basket
+                {
+                    UserId = vm.UserId,
+                    ProductId = vm.ProductId,
+                    Quantity = vm.Quantity
+                };
+                _connection.Baskets.Add(basketItem);
+                await _connection.SaveChangesAsync();
+
+                return CreatedAtAction("GetBasketItems", new { userId = vm.UserId }, basketItem);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
     }
 }

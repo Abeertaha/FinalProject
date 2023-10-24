@@ -9,28 +9,62 @@ using Supplement.Models;
 using Supplement.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Supplement.DataAccess;
+using Supplement.ViewModels.Items;
+using Supplement.ViewModels.Users;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using System.ComponentModel;
 
 namespace Supplement.Controllers
 {
-    [Route("[controller]")]
-    public class SupplementsController : Controller
+    [ApiController]
+    [Route("[controller]/[action]")]
+    public class ItemsController : ControllerBase
     {
-        private readonly ILogger<SupplementsController> _logger;
-
-        public SupplementsController(ILogger<SupplementsController> logger)
+        private readonly DbConnection _connection;
+        public ItemsController(DbConnection connection)
         {
-            _logger = logger;
+            _connection = connection;
         }
 
-        public IActionResult Index()
+        [HttpGet]
+        public async Task<IEnumerable<Items>> GetByCategory(string category) 
         {
-            return View();
+            var items = await _connection.Items
+            .Include(p => p.Subcategory)
+            .Where(p => p.Subcategory.Category.Name == category)
+            .ToListAsync();
+
+            return items.Select(p => new Items
+            {
+                Name = p.Name,
+                Id = p.Id,
+                
+                Subcategory = new Subcategory 
+                {
+                    Id = p.Subcategory.Id,
+                    Name = p.Subcategory.Name,
+                }
+            }).ToList();
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpPost]
+        public async Task<IActionResult> Post(CreateItemsVM vm)
         {
-            return View("Error!");
+        try
+        {
+        var item = new Items
+        {
+            Name = vm.Name,
+        };
+        _connection.Items.Add(item);
+        await _connection.SaveChangesAsync();
+
+        return CreatedAtAction("GetItem", new { id = item.Id }, item);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal Server Error: {ex.Message}");
+        }
         }
     }
 }

@@ -9,28 +9,62 @@ using Supplement.Models;
 using Supplement.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Supplement.DataAccess;
+using Supplement.ViewModels.Users;
+using Supplement.ViewModels.Subcategory;
 
 namespace Supplement.Controllers
 {
-    [Route("[controller]")]
-    public class SubcategoryController : Controller
+    [ApiController]
+    [Route("[controller]/[action]")]
+    public class SubcategoryController : ControllerBase
     {
-        private readonly ILogger<SubcategoryController> _logger;
-
-        public SubcategoryController(ILogger<SubcategoryController> logger)
+        private readonly DbConnection _connection;
+        public SubcategoryController(DbConnection connection)
         {
-            _logger = logger;
+            _connection = connection;
         }
 
-        public IActionResult Index()
+        [HttpGet]
+        public async Task<IEnumerable<Subcategory>> Get()
         {
-            return View();
+            var subCategories = await _connection.SubCategories.Include(sc => sc.Category).ToListAsync();
+            return subCategories.Select(sc => new Subcategory
+            {
+                Id = sc.Id,
+                Name = sc.Name,
+                CategoryId = sc.CategoryId,
+
+                Category = new Category
+                {
+                    Id = sc.Category.Id,
+                    Name = sc.Category.Name,
+                }
+            }).ToList();
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpPost]
+        public async Task<IActionResult> Post(CreateSubcategoryVM vm)
         {
-            return View("Error!");
+            var subcategory = new Subcategory
+            {
+                Name = vm.Name,
+                CategoryId = vm.CategoryId,
+            };
+
+            _connection.SubCategories.Add(subcategory);
+            await _connection.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var subcategory = await _connection.SubCategories.FindAsync(id);
+            _connection.SubCategories.Remove(subcategory);
+            await _connection.SaveChangesAsync();
+
+            return Ok();
         }
     }
 }
